@@ -1,0 +1,70 @@
+#Maintainer: archdevlab <https://github.com/archdevlab>
+#Credits: Gustavo Alvarez <sl1pkn07@gmail.com>
+
+pkgname=lib32-khronos-ocl-icd-git
+pkgdesc='Khronos Group OpenCL installable client driver (ICD) loader. (32-bit) (git version)'
+pkgver=2023.04.17.r5.g229410f
+pkgrel=1
+arch=(i686 x86_64)
+url='https://github.com/KhronosGroup/OpenCL-ICD-Loader'
+license=(Apache-2.0)
+makedepends=(ruby lib32-mesa opencl-headers gcc-multilib git cmake make)
+depends=(lib32-glibc)
+optdepends=('lib32-opencl-driver: packaged opencl driver')
+conflicts=(lib32-libcl lib32-ocl-icd lib32-ocl-icd-git lib32-ocl-icd-amdgpu-pro lib32-ocl-icd-amdgpu-pro-21.20)
+replaces=(lib32-libcl)
+provides=(lib32-opencl-icd-loader lib32-ocl-icd lib32-khronos-ocl-icd lib32-khronos-ocl-icd-git)
+source=(git+https://github.com/KhronosGroup/OpenCL-ICD-Loader.git)
+
+pkgver(){
+  cd "${srcdir}"/OpenCL-ICD-Loader
+  # cutting off 'foo-' prefix that presents in the git tag
+  git describe --long --tags --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare(){
+  # fix .cmake path
+  sed 's|${CMAKE_INSTALL_DATADIR}/cmake|${CMAKE_INSTALL_LIBDIR}/cmake|g' -i ${srcdir}/OpenCL-ICD-Loader/CMakeLists.txt
+}
+
+build(){
+export CFLAGS+=" -m32"
+export CXXFLAGS+=" -m32"
+export LDFLAGS+=" -m32"
+export ASFLAGS+=" --32"
+export PKG_CONFIG_PATH=/usr/lib32/pkgconfig
+
+  cmake -B "${srcdir}"/build -S "${srcdir}"/OpenCL-ICD-Loader \
+  -D CMAKE_C_FLAGS=-m32 \
+  -D CMAKE_CXX_FLAGS=-m32 \
+  -G "Unix Makefiles" \
+  -D CMAKE_BUILD_TYPE=Release \
+  -D CMAKE_INSTALL_PREFIX=/usr \
+  -D CMAKE_INSTALL_LIBDIR=lib32 \
+  -D CMAKE_INSTALL_SYSCONFDIR=/etc \
+  -D CMAKE_INSTALL_DATADIR=share \
+  -D CMAKE_INSTALL_INCLUDEDIR=include \
+  -D ENABLE_OPENCL_LAYERS=ON \
+  -D ENABLE_OPENCL_LAYERINFO=ON \
+  -D OPENCL_ICD_LOADER_HEADERS_DIR=/usr/include \
+  -D OPENCL_ICD_LOADER_BUILD_SHARED_LIBS=ON \
+  -D OPENCL_ICD_LOADER_BUILD_TESTING=OFF \
+  -Wno-dev
+
+  make -j$(nproc) -C "${srcdir}"/build
+}
+
+package(){
+  make -j$(nproc) -C "${srcdir}"/build DESTDIR="${pkgdir}" install
+
+  # remove /usr/bin dir
+  mv "${pkgdir}"/usr/bin/cllayerinfo "${pkgdir}"/usr/bin/cllayerinfo-32
+
+  # install license
+  install -dm755 "${pkgdir}"/usr/share/licenses/"${pkgname}"
+  install -m644 "${srcdir}"/OpenCL-ICD-Loader/LICENSE "${pkgdir}"/usr/share/licenses/"${pkgname}"/
+}
+
+sha256sums=(SKIP)
+
+# vim:set ts=8 sts=2 sw=2 et:
