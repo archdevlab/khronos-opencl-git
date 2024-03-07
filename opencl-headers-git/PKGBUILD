@@ -4,7 +4,7 @@
 
 pkgname=opencl-headers-git
 pkgdesc='OpenCL (Open Computing Language) header files (git version)'
-pkgver=2022.01.04.r3.gdcd5bed
+pkgver=2023.12.14.r2.g5945253
 pkgrel=1
 arch=(any)
 url='https://github.com/KhronosGroup/OpenCL-Headers'
@@ -17,7 +17,6 @@ source=(git+https://github.com/KhronosGroup/OpenCL-Headers.git)
 
 pkgver(){
   cd "${srcdir}"/OpenCL-Headers
-  # cutting off 'foo-' prefix that presents in the git tag
   git describe --long --tags --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
 }
 

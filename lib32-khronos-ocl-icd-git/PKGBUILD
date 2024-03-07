@@ -3,7 +3,7 @@
 
 pkgname=lib32-khronos-ocl-icd-git
 pkgdesc='Khronos Group OpenCL installable client driver (ICD) loader. (32-bit) (git version)'
-pkgver=2023.04.17.r5.g229410f
+pkgver=2023.12.14.r3.g861b68b
 pkgrel=1
 arch=(i686 x86_64)
 url='https://github.com/KhronosGroup/OpenCL-ICD-Loader'
@@ -11,14 +11,13 @@ license=(Apache-2.0)
 makedepends=(ruby lib32-mesa opencl-headers gcc-multilib git cmake make)
 depends=(lib32-glibc)
 optdepends=('lib32-opencl-driver: packaged opencl driver')
-conflicts=(lib32-libcl lib32-ocl-icd lib32-ocl-icd-git lib32-ocl-icd-amdgpu-pro lib32-ocl-icd-amdgpu-pro-21.20)
+conflicts=(lib32-libcl lib32-ocl-icd lib32-ocl-icd-git)
 replaces=(lib32-libcl)
-provides=(lib32-opencl-icd-loader lib32-ocl-icd lib32-khronos-ocl-icd lib32-khronos-ocl-icd-git)
+provides=(lib32-opencl-icd-loader lib32-ocl-icd lib32-ocl-icd-git lib32-khronos-ocl-icd lib32-khronos-ocl-icd-git)
 source=(git+https://github.com/KhronosGroup/OpenCL-ICD-Loader.git)
 
 pkgver(){
   cd "${srcdir}"/OpenCL-ICD-Loader
-  # cutting off 'foo-' prefix that presents in the git tag
   git describe --long --tags --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
@@ -32,7 +31,10 @@ export CFLAGS+=" -m32"
 export CXXFLAGS+=" -m32"
 export LDFLAGS+=" -m32"
 export ASFLAGS+=" --32"
-export PKG_CONFIG_PATH=/usr/lib32/pkgconfig
+export PKG_CONFIG="i686-pc-linux-gnu-pkg-config"
+export PKG_CONFIG_PATH="/usr/lib32/pkgconfig"
+
+  rm -rf "${srcdir}"/build
 
   cmake -B "${srcdir}"/build -S "${srcdir}"/OpenCL-ICD-Loader \
   -D CMAKE_C_FLAGS=-m32 \
@@ -48,7 +50,7 @@ export PKG_CONFIG_PATH=/usr/lib32/pkgconfig
   -D ENABLE_OPENCL_LAYERINFO=ON \
   -D OPENCL_ICD_LOADER_HEADERS_DIR=/usr/include \
   -D OPENCL_ICD_LOADER_BUILD_SHARED_LIBS=ON \
-  -D OPENCL_ICD_LOADER_BUILD_TESTING=OFF \
+  -D OPENCL_ICD_LOADER_BUILD_TESTING=ON \
   -Wno-dev
 
   make -j$(nproc) -C "${srcdir}"/build
@@ -57,7 +59,7 @@ export PKG_CONFIG_PATH=/usr/lib32/pkgconfig
 package(){
   make -j$(nproc) -C "${srcdir}"/build DESTDIR="${pkgdir}" install
 
-  # remove /usr/bin dir
+  # remane cllayerinfo
   mv "${pkgdir}"/usr/bin/cllayerinfo "${pkgdir}"/usr/bin/cllayerinfo-32
 
   # install license

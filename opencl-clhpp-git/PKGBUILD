@@ -3,12 +3,12 @@
 
 pkgname=opencl-clhpp-git
 pkgdesc='OpenCL C++ header files (git version)'
-pkgver=2.0.16.r4.g61a5c9a
+pkgver=2023.12.14.r2.g37aab7c
 pkgrel=1
 arch=(any)
 url='https://github.com/KhronosGroup/OpenCL-CLHPP'
 license=(Apache-2.0)
-makedepends=(cmake doxygen graphviz opencl-headers make git ruby)
+makedepends=(cmake doxygen graphviz opencl-headers make git ruby clang)
 depends=(opencl-headers)
 conflicts=(opencl-clhpp)
 provides=(opencl-clhpp opencl-clhpp-git)
@@ -16,7 +16,6 @@ source=(git+https://github.com/KhronosGroup/OpenCL-CLHPP.git)
 
 pkgver(){
   cd "${srcdir}"/OpenCL-CLHPP
-  # cutting off 'foo-' prefix that presents in the git tag
   git describe --long --tags --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
